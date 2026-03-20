@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="description" content="Familie Einkaufsliste" />
+  <title>🛒 Familien-Einkaufsliste</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1c1c2e;
+      --surface2: #252540;
+      --accent: #f5a623;
+      --accent2: #e8472a;
+      --text: #f0ede8;
+      --text-muted: #8888aa;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 120px; }
+
+    .header-img-wrap { position: relative; width: 100%; height: 200px; overflow: hidden; }
+    .header-img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; filter: brightness(0.65) saturate(1.1); }
+    .header-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 30%, var(--bg) 100%); }
+    .header-title { position: absolute; bottom: 16px; left: 20px; font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 2px; color: var(--accent); text-shadow: 0 2px 12px rgba(0,0,0,0.8); }
+    .header-sub { position: absolute; bottom: 20px; right: 20px; font-size: 0.72rem; color: var(--text-muted); font-style: italic; }
+
+    .sync-bar { display: flex; align-items: center; gap: 8px; padding: 8px 20px; background: var(--surface); border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.75rem; color: var(--text-muted); }
+    .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; transition: background 0.4s; }
+    .sync-dot.live { background: #4caf50; box-shadow: 0 0 6px #4caf50; }
+    .sync-dot.offline { background: #e8472a; }
+
+    .container { max-width: 640px; margin: 0 auto; padding: 16px 16px 0; }
+
+    .add-bar { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .add-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .add-input { flex: 1; background: var(--surface2); border: 1.5px solid transparent; border-radius: 10px; padding: 12px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+    .add-input:focus { border-color: var(--accent); }
+    .add-input::placeholder { color: var(--text-muted); }
+
+    .btn { border: none; border-radius: 10px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+    .btn-add { background: var(--accent); color: #111; padding: 12px 18px; font-size: 1.1rem; min-width: 48px; }
+    .btn-add:hover { background: #ffb83f; }
+    .btn-mic { background: var(--surface2); color: var(--text-muted); padding: 12px; font-size: 1.2rem; min-width: 48px; border: 1.5px solid transparent; }
+    .btn-mic.listening { background: var(--accent2); color: white; border-color: var(--accent2); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(232,71,42,0.4);}50%{box-shadow:0 0 0 8px rgba(232,71,42,0);} }
+
+    .cat-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+    .cat-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cat-chip { padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--surface2); background: transparent; color: var(--text-muted); font-size: 0.78rem; cursor: pointer; transition: all 0.18s; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 5px; }
+    .cat-chip:hover { border-color: var(--text-muted); color: var(--text); }
+    .cat-chip.active { border-color: var(--accent); color: #111; background: var(--accent); font-weight: 600; box-shadow: 0 2px 8px rgba(245,166,35,0.3); }
+    .active-hint { font-size: 0.72rem; color: var(--accent); margin-top: 8px; display: flex; align-items: center; gap: 4px; min-height: 18px; }
+    .mic-hint { font-size: 0.72rem; color: var(--accent); margin-top: 6px; min-height: 16px; }
+
+    .filter-tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .filter-tabs::-webkit-scrollbar { display: none; }
+    .tab { white-space: nowrap; padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--surface2); background: transparent; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.18s; }
+    .tab.active { background: var(--accent); color: #111; border-color: var(--accent); font-weight: 600; }
+
+    .section-label { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 2px; color: var(--text-muted); margin: 20px 0 8px; display: flex; align-items: center; gap: 8px; }
+    .section-line { flex: 1; height: 1px; background: var(--surface2); }
+
+    .item { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow); animation: slideIn 0.25s ease; transition: opacity 0.3s; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);} }
+    .item.done { opacity: 0.4; }
+    .item.done .item-name { text-decoration: line-through; color: var(--text-muted); }
+
+    .checkbox { width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--surface2); background: transparent; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.18s; font-size: 0.9rem; }
+    .checkbox.checked { background: var(--accent); border-color: var(--accent); }
+    .item-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name { font-size: 1rem; font-weight: 500; }
+    .item-cat { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .item-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; padding: 4px; border-radius: 6px; transition: color 0.2s; }
+    .item-del:hover { color: var(--accent2); }
+
+    .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid rgba(255,255,255,0.07); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .count-info { font-size: 0.8rem; color: var(--text-muted); }
+    .count-info strong { color: var(--accent); }
+    .btn-clear { background: var(--surface2); color: var(--text-muted); padding: 9px 14px; font-size: 0.8rem; border-radius: 10px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: color 0.2s; }
+    .btn-clear:hover { color: var(--accent2); }
+    .btn-export { background: var(--accent2); color: white; padding: 9px 16px; font-size: 0.82rem; border-radius: 10px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; }
+    .btn-export:hover { background: #ff5a3d; }
+
+    .empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem; }
+    .empty div { font-size: 2.5rem; margin-bottom: 12px; }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--accent); color: #111; padding: 10px 20px; border-radius: 30px; font-weight: 600; font-size: 0.85rem; transition: transform 0.3s; z-index: 999; pointer-events: none; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .install-banner { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #111; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.82rem; font-weight: 600; }
+    .install-banner button { background: rgba(0,0,0,0.15); border: none; color: #111; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+
+<div class="install-banner" id="installBanner" style="display:none">
+  📱 Als App installieren?
+  <button onclick="installApp()">Installieren</button>
+  <button onclick="document.getElementById('installBanner').style.display='none'">✕</button>
+</div>
+
+<div class="header-img-wrap">
+  <img src="alf.jpg" alt="ALF Header" />
+  <div class="header-overlay"></div>
+  <div class="header-title">🛒 Einkaufsliste</div>
+  <div class="header-sub">powered by ALF Schumacher</div>
+</div>
+
+<div class="sync-bar">
+  <div class="sync-dot" id="syncDot"></div>
+  <span id="syncStatus">Verbinde…</span>
+</div>
+
+<div class="container">
+  <div class="add-bar">
+    <div class="add-row">
+      <input class="add-input" id="itemInput" type="text" placeholder="Artikel hinzufügen…" autocomplete="off" />
+      <button class="btn btn-mic" id="micBtn" onclick="toggleMic()">🎤</button>
+      <button class="btn btn-add" onclick="addItem()">+</button>
+    </div>
+    <div class="cat-label">Kategorie wählen:</div>
+    <div class="cat-row" id="catSelect"></div>
+    <div class="active-hint" id="activeHint"></div>
+    <div class="mic-hint" id="micHint"></div>
+  </div>
+  <div class="filter-tabs" id="filterTabs"></div>
+  <div id="listContainer"></div>
+</div>
+
+<div class="bottom-bar">
+  <div class="count-info" id="countInfo"></div>
+  <button class="btn-clear" onclick="clearDone()">✓ Erledigt löschen</button>
+  <button class="btn-export" onclick="exportList()">⬇ Export</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, push, remove, update }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAcdrOqY1YWHL-3-_8Amsl3R9hyEp4A73s",
+    authDomain: "shopping-list-1d648.firebaseapp.com",
+    databaseURL: "https://shopping-list-1d648-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "shopping-list-1d648",
+    storageBucket: "shopping-list-1d648.firebasestorage.app",
+    messagingSenderId: "76956863881",
+    appId: "1:76956863881:web:ab7b3b49db2c4ca756a558"
+  };
+
+  const CATS = [
+    { id:"obst",      label:"Obst & Gemüse",  icon:"🍎" },
+    { id:"fleisch",   label:"Fleisch & Fisch", icon:"🥩" },
+    { id:"milch",     label:"Milch & Käse",   icon:"🥛" },
+    { id:"baeckerei", label:"Bäckerei",        icon:"🍞" },
+    { id:"getraenke", label:"Getränke",        icon:"🥤" },
+    { id:"tiefkuehl", label:"Tiefkühl",        icon:"🧊" },
+    { id:"haushalt",  label:"Haushalt",        icon:"🧹" },
+    { id:"suesses",   label:"Süßes",           icon:"🍫" },
+    { id:"sonstiges", label:"Sonstiges",       icon:"📦" },
+  ];
+
+  let items = {}, selCat = "sonstiges", filterCat = "alle";
+  let recognition = null, isListening = false, deferredPrompt = null;
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  onValue(ref(db, "einkaufsliste"), (snap) => {
+    items = snap.val() || {};
+    render();
+    setSyncStatus(true);
+  }, () => setSyncStatus(false));
+
+  function setSyncStatus(live) {
+    document.getElementById("syncDot").className = "sync-dot " + (live ? "live" : "offline");
+    document.getElementById("syncStatus").textContent = live ? "Echtzeit-Sync aktiv ✓" : "Verbindung unterbrochen";
+  }
+
+  function getCat(id) { return CATS.find(c => c.id === id) || CATS[CATS.length-1]; }
+
+  function buildCatBtns() {
+    document.getElementById("catSelect").innerHTML = CATS.map(c =>
+      `<button class="cat-chip${selCat===c.id?' active':''}" onclick="window._selCat('${c.id}')">
+        <span>${c.icon}</span>${c.label}
+      </button>`
+    ).join("");
+    const a = getCat(selCat);
+    document.getElementById("activeHint").innerHTML = `<span>${a.icon}</span> Aktiv: <strong>${a.label}</strong>`;
+  }
+
+  window._selCat = (id) => { selCat = id; buildCatBtns(); };
+
+  function buildFilterTabs() {
+    const tabs = [{id:"alle",label:"Alle",icon:"🛒"}, ...CATS];
+    document.getElementById("filterTabs").innerHTML = tabs.map(c =>
+      `<button class="tab${filterCat===c.id?' active':''}" onclick="window._filter('${c.id}')">${c.icon} ${c.label}</button>`
+    ).join("");
+  }
+
+  window._filter = (id) => { filterCat = id; buildFilterTabs(); renderList(); };
+
+  function render() { buildCatBtns(); buildFilterTabs(); renderList(); }
+
+  function renderList() {
+    const all = Object.entries(items);
+    const filtered = filterCat==="alle" ? all : all.filter(([,v])=>v.cat===filterCat);
+    const open = filtered.filter(([,v])=>!v.done);
+    const done = filtered.filter(([,v])=>v.done);
+    let html = "";
+    if (!filtered.length) {
+      html = `<div class="empty"><div>🛒</div>Liste ist leer — leg los!</div>`;
+    } else {
+      html += open.map(renderItem).join("");
+      if (done.length) {
+        html += `<div class="section-label"><span class="section-line"></span><span>✓ Erledigt</span><span class="section-line"></span></div>`;
+        html += done.map(renderItem).join("");
+      }
+    }
+    document.getElementById("listContainer").innerHTML = html;
+    const total = all.length, doneCount = all.filter(([,v])=>v.done).length;
+    document.getElementById("countInfo").innerHTML = `<strong>${doneCount}/${total}</strong> erledigt`;
+  }
+
+  function renderItem([id, item]) {
+    const cat = getCat(item.cat);
+    return `<div class="item${item.done?' done':''}">
+      <div class="checkbox${item.done?' checked':''}" onclick="window._toggle('${id}')">${item.done?'✓':''}</div>
+      <span class="item-icon">${cat.icon}</span>
+      <div class="item-info">
+        <div class="item-name">${esc(item.name)}</div>
+        <div class="item-cat">${cat.label}</div>
+      </div>
+      <button class="item-del" onclick="window._del('${id}')">🗑</button>
+    </div>`;
+  }
+
+  function esc(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  window.addItem = () => {
+    const inp = document.getElementById("itemInput");
+    const name = inp.value.trim();
+    if (!name) return;
+    push(ref(db,"einkaufsliste"), { name, cat: selCat, done: false, ts: Date.now() });
+    inp.value = ""; toast(`"${name}" hinzugefügt`); inp.focus();
+  };
+
+  window._toggle = (id) => update(ref(db,`einkaufsliste/${id}`), { done: !items[id]?.done });
+
+  window._del = (id) => { const n=items[id]?.name||""; remove(ref(db,`einkaufsliste/${id}`)); toast(`"${n}" gelöscht`); };
+
+  window.clearDone = () => {
+    const keys = Object.entries(items).filter(([,v])=>v.done).map(([k])=>k);
+    if (!keys.length) { toast("Nichts zu löschen"); return; }
+    const u = {}; keys.forEach(k=>u[`einkaufsliste/${k}`]=null);
+    update(ref(db,"/"),u); toast(`${keys.length} Artikel gelöscht`);
+  };
+
+  window.exportList = () => {
+    const arr = Object.values(items);
+    if (!arr.length) { toast("Keine Artikel"); return; }
+    let txt = "🛒 EINKAUFSLISTE\n" + new Date().toLocaleDateString("de-DE",{weekday:"long",year:"numeric",month:"long",day:"numeric"}) + "\n\n";
+    CATS.forEach(cat => {
+      const ci = arr.filter(i=>i.cat===cat.id);
+      if (!ci.length) return;
+      txt += `${cat.icon} ${cat.label.toUpperCase()}\n`;
+      ci.forEach(i => txt += `  ${i.done?'✓':'○'} ${i.name}\n`);
+      txt += "\n";
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([txt],{type:"text/plain;charset=utf-8"}));
+    a.download = `Einkaufsliste_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click(); toast("Exportiert!");
+  };
+
+  window.toggleMic = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { toast("Spracheingabe: Chrome oder Safari nutzen"); return; }
+    if (isListening) { recognition?.stop(); return; }
+    recognition = new SR();
+    recognition.lang = "de-DE";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onstart = () => {
+      isListening = true;
+      document.getElementById("micBtn").classList.add("listening");
+      document.getElementById("micBtn").textContent = "⏹";
+      document.getElementById("micHint").textContent = "Sprechen…";
+    };
+    recognition.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      document.getElementById("itemInput").value = text;
+      document.getElementById("micHint").textContent = `"${text}" erkannt — + drücken zum Hinzufügen`;
+    };
+    recognition.onend = () => {
+      isListening = false;
+      document.getElementById("micBtn").classList.remove("listening");
+      document.getElementById("micBtn").textContent = "🎤";
+      setTimeout(()=>{ document.getElementById("micHint").textContent=""; }, 3000);
+    };
+    recognition.onerror = (e) => {
+      isListening = false;
+      document.getElementById("micBtn").classList.remove("listening");
+      document.getElementById("micBtn").textContent = "🎤";
+      document.getElementById("micHint").textContent = e.error==="not-allowed" ? "Mikrofon-Zugriff verweigert — Einstellungen prüfen" : "Fehler: "+e.error;
+    };
+    recognition.start();
+  };
+
+  function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"), 2200);
+  }
+
+  document.getElementById("itemInput").addEventListener("keydown", e => { if(e.key==="Enter") window.addItem(); });
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); deferredPrompt = e;
+    document.getElementById("installBanner").style.display = "flex";
+  });
+  window.installApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById("installBanner").style.display = "none";
+  };
+
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
