@@ -8,7 +8,7 @@
   <title>🛒 Familien-Einkaufsliste</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Tektur:wght@700&display=swap" rel="stylesheet" />
 
   <style>
     :root {
@@ -23,12 +23,12 @@
       --shadow: 0 4px 24px rgba(0,0,0,0.4);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 120px; }
+    body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 120px; }
 
     .header-img-wrap { position: relative; width: 100%; height: 200px; overflow: hidden; }
     .header-img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; filter: brightness(0.65) saturate(1.1); }
     .header-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 30%, var(--bg) 100%); }
-    .header-title { position: absolute; bottom: 16px; left: 20px; font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 2px; color: var(--accent); text-shadow: 0 2px 12px rgba(0,0,0,0.8); }
+    .header-title { position: absolute; bottom: 16px; left: 20px; font-family: 'Tektur', Arial, sans-serif; font-size: 2.4rem; letter-spacing: 2px; color: var(--accent); text-shadow: 0 2px 12px rgba(0,0,0,0.8); }
     .header-sub { position: absolute; bottom: 20px; right: 20px; font-size: 0.72rem; color: var(--text-muted); font-style: italic; }
 
     .sync-bar { display: flex; align-items: center; gap: 8px; padding: 8px 20px; background: var(--surface); border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.75rem; color: var(--text-muted); }
@@ -76,8 +76,8 @@
     .checkbox.checked { background: var(--accent); border-color: var(--accent); }
     .item-icon { font-size: 1.3rem; flex-shrink: 0; }
     .item-info { flex: 1; min-width: 0; }
-    .item-name { font-size: 1rem; font-weight: 500; }
-    .item-cat { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .item-name { font-size: 1.1rem; font-weight: 500; }
+    .item-cat { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
     .item-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; padding: 4px; border-radius: 6px; transition: color 0.2s; }
     .item-del:hover { color: var(--accent2); }
 
@@ -109,7 +109,7 @@
   <img src="alf.jpg" alt="ALF Header" />
   <div class="header-overlay"></div>
   <div class="header-title">🛒 Einkaufsliste</div>
-  <div class="header-sub">powered by ALF Schumacher</div>
+  <div class="header-sub">powered by #Nav83</div>
 </div>
 
 <div class="sync-bar">
@@ -298,7 +298,8 @@
     recognition.onresult = (e) => {
       const text = e.results[0][0].transcript;
       document.getElementById("itemInput").value = text;
-      document.getElementById("micHint").textContent = `"${text}" erkannt — + drücken zum Hinzufügen`;
+      document.getElementById("micHint").textContent = `"${text}" wird hinzugefügt…`;
+      setTimeout(() => window.addItem(), 400);
     };
     recognition.onend = () => {
       isListening = false;
